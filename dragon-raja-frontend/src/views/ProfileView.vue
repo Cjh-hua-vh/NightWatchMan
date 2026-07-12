@@ -77,6 +77,7 @@
                 <el-option label="学生会" value="学生会" />
                 <el-option label="执行部" value="执行部" />
                 <el-option label="教授" value="教授" />
+                <el-option label="无" value="" />
               </el-select>
             </el-form-item>
 
@@ -276,7 +277,7 @@ async function handleSaveProfile() {
       avatar: profileForm.avatar,
       signature: profileForm.signature,
       bloodlineGrade: profileForm.bloodlineGrade,
-      faction: profileForm.faction,
+      faction: profileForm.faction || null,
       yanling: profileForm.yanling
     })
     ElMessage.success('资料修改成功')

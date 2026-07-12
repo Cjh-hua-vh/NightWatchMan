@@ -212,8 +212,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             user.setSignature(dto.getSignature());
         }
         // 血统等级不可通过个人资料修改（仅诺玛/3E测试可设定）
-        if (StringUtils.hasText(dto.getFaction())) {
-            user.setFaction(dto.getFaction());
+        if (dto.getFaction() != null) {
+            // 传入空字符串视为清空派系
+            user.setFaction(StringUtils.hasText(dto.getFaction()) ? dto.getFaction() : null);
         }
         // 言灵仅管理员可修改（普通用户不可自行设定）
         if (dto.getYanling() != null && "ADMIN".equals(user.getRole())) {
@@ -536,8 +537,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (StringUtils.hasText(dto.getBloodlineGrade())) {
             user.setBloodlineGrade(dto.getBloodlineGrade());
         }
-        if (StringUtils.hasText(dto.getFaction())) {
-            user.setFaction(dto.getFaction());
+        if (dto.getFaction() != null) {
+            // 传入空字符串视为清空派系
+            user.setFaction(StringUtils.hasText(dto.getFaction()) ? dto.getFaction() : null);
         }
         if (dto.getYanling() != null) {
             user.setYanling(dto.getYanling());
