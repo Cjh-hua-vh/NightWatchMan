@@ -1,0 +1,161 @@
+%% 龙族守夜人讨论区 - 核心调用时序图
+
+sequenceDiagram
+    autonumber
+    participant U as 用户/浏览器
+    participant F as 前端 (Vue3)
+    participant A as Axios拦截器
+    participant J as JwtAuthFilter
+    participant C as Controller
+    participant S as Service
+    participant M as Mapper
+    participant DB as MySQL
+
+    %% ============ 注册流程 ============
+    rect rgb(10, 14, 39)
+        Note over U, DB: ① 用户注册流程
+        U->>F: 填写注册表单
+        F->>A: POST /api/auth/register
+        A->>J: 无Token，白名单放行
+        J->>C: AuthController.register(RegisterDTO)
+        C->>S: userService.register(dto)
+        S->>M: userMapper.selectByUsername(username)
+        M->>DB: SELECT * FROM user WHERE username=?
+        DB-->>M: null (不存在)
+        M-->>S: null
+        S->>S: BCrypt加密密码, status=0
+        S->>M: userMapper.insert(user)
+        M->>DB: INSERT INTO user(...)
+        DB-->>M: 成功
+        M-->>S: 完成
+        S-->>C: void
+        C-->>A: Result.success("注册成功，等待审核")
+        A-->>F: {code:200, message:"注册成功..."}
+        F-->>U: 提示"注册成功，等待管理员审核"
+    end
+
+    %% ============ 登录流程 ============
+    rect rgb(15, 52, 96)
+        Note over U, DB: ② 用户登录流程
+        U->>F: 输入用户名密码，点击登录
+        F->>A: POST /api/auth/login
+        A->>J: 无Token，白名单放行
+        J->>C: AuthController.login(LoginDTO)
+        C->>S: userService.login(dto)
+        S->>M: userMapper.selectByUsername(username)
+        M->>DB: SELECT * FROM user WHERE username=?
+        DB-->>M: User记录
+        M-->>S: User对象
+        S->>S: 校验 status==1 (正常)
+        S->>S: BCrypt.matches(pwd, hash)
+        S->>S: JwtUtils.generateToken(...)
+        S->>M: userMapper.updateOnlineStatus(id, 1)
+        M->>DB: UPDATE user SET online_status=1
+        S-->>C: LoginVO(token, userInfo)
+        C-->>A: Result.success(LoginVO)
+        A-->>F: {code:200, data:{token,...}}
+        F->>F: localStorage存储token+userInfo
+        F-->>U: 跳转首页
+    end
+
+    %% ============ JWT鉴权流程 ============
+    rect rgb(22, 33, 62)
+        Note over U, DB: ③ JWT鉴权流程（每次需鉴权请求）
+        U->>F: 操作（如发布帖子）
+        F->>A: POST /api/posts
+        A->>A: 请求拦截器: 读取localStorage.token
+        A->>J: Authorization: Bearer <token>
+        J->>J: JwtUtils.parseToken(token)
+        J->>J: UserContext.set(userId, username, role)
+        J->>C: 放行 → PostController.create(PostDTO)
+        C->>C: UserContext.getCurrentUserId()
+        C->>S: postService.create(dto, userId)
+        S->>M: postMapper.insert(post)
+        M->>DB: INSERT INTO post(...)
+        DB-->>M: 成功
+        M-->>S: 完成
+        S-->>C: void
+        C-->>A: Result.success("发布成功")
+        J->>J: finally: UserContext.clear()
+        A-->>F: {code:200, message:"发布成功"}
+        F-->>U: 提示"发布成功"
+    end
+
+    %% ============ 帖子详情+评论 ============
+    rect rgb(26, 58, 96)
+        Note over U, DB: ④ 帖子详情 + 评论列表（并行请求）
+        U->>F: 点击帖子标题
+        par 请求帖子详情
+            F->>A: GET /api/posts/{id}
+            A->>J: Token鉴权(可选)
+            J->>C: PostController.detail(id)
+            C->>S: postService.getPostDetail(id)
+            S->>M: postMapper.selectPostDetail(id)
+            M->>DB: SELECT post+user JOIN
+            DB-->>M: PostVO
+            S->>M: postMapper.incrementViewCount(id)
+            M->>DB: UPDATE post SET view_count=view_count+1
+            S-->>C: PostVO
+            C-->>A: Result.success(PostVO)
+            A-->>F: 帖子详情数据
+        and 请求评论列表
+            F->>A: GET /api/comments/post/{id}?current=1&size=10
+            A->>J: Token鉴权(可选)
+            J->>C: CommentController.list(postId, 1, 10)
+            C->>S: commentService.getCommentPage(postId, 1, 10)
+            S->>M: commentMapper.selectCommentPage(page, postId)
+            M->>DB: SELECT comment+user JOIN LIMIT
+            DB-->>M: Page<CommentVO>
+            M-->>S: IPage<CommentVO>
+            S-->>C: PageResult<CommentVO>
+            C-->>A: Result.success(PageResult)
+            A-->>F: 评论分页数据
+        end
+        F-->>U: 渲染帖子详情+评论区
+    end
+
+    %% ============ 管理员审核用户 ============
+    rect rgb(40, 20, 60)
+        Note over U, DB: ⑤ 管理员审核用户流程
+        U->>F: 管理员点击"通过"按钮
+        F->>A: PUT /api/admin/users/{id}/audit
+        A->>A: 请求拦截器: 添加Admin Token
+        A->>J: Authorization: Bearer <admin_token>
+        J->>J: 解析Token, 校验role==ADMIN
+        J->>C: AdminController.auditUser(id, AuditUserDTO)
+        C->>C: UserContext.getCurrentRole() → "ADMIN"
+        C->>S: userService.auditUser(id, dto)
+        S->>M: userMapper.selectById(id)
+        M->>DB: SELECT * FROM user WHERE id=?
+        DB-->>S: User(status=0)
+        S->>S: 校验当前状态为待审核
+        S->>M: userMapper.updateStatus(id, 1)
+        M->>DB: UPDATE user SET status=1 WHERE id=?
+        DB-->>M: 成功
+        M-->>S: 完成
+        S-->>C: void
+        C-->>A: Result.success("审核通过")
+        A-->>F: {code:200, message:"审核通过"}
+        F-->>U: 提示"审核通过"，刷新列表
+    end
+
+    %% ============ 发表评论 ============
+    rect rgb(10, 40, 50)
+        Note over U, DB: ⑥ 发表评论流程
+        U->>F: 输入评论内容，点击发送
+        F->>A: POST /api/comments
+        A->>A: 请求拦截器: 添加Token
+        A->>J: 鉴权
+        J->>C: CommentController.create(CommentDTO)
+        C->>C: UserContext.getCurrentUserId()
+        C->>S: commentService.create(dto, userId)
+        S->>M: commentMapper.insert(comment)
+        M->>DB: INSERT INTO comment(...)
+        S->>M: postMapper.incrementCommentCount(postId)
+        M->>DB: UPDATE post SET comment_count=comment_count+1
+        S-->>C: void
+        C-->>A: Result.success("评论成功")
+        A-->>F: {code:200, message:"评论成功"}
+        F->>F: 刷新评论列表
+        F-->>U: 评论显示在列表中
+    end

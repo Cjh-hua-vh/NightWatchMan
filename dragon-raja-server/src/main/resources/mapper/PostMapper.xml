@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dragonraja.forum.mapper.PostMapper">
+
+    <!-- PostListVO 结果映射 -->
+    <resultMap id="PostListResultMap" type="com.dragonraja.forum.vo.PostListVO">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="category" property="category"/>
+        <result column="user_id" property="userId"/>
+        <result column="nickname" property="nickname"/>
+        <result column="avatar" property="avatar"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="comment_count" property="commentCount"/>
+        <result column="is_top" property="isTop"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <!-- PostVO 详情结果映射 -->
+    <resultMap id="PostDetailResultMap" type="com.dragonraja.forum.vo.PostVO">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="category" property="category"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="nickname" property="nickname"/>
+        <result column="avatar" property="avatar"/>
+        <result column="bloodline_grade" property="bloodlineGrade"/>
+        <result column="faction" property="faction"/>
+        <result column="yanling" property="yanling"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="comment_count" property="commentCount"/>
+        <result column="is_top" property="isTop"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 分页查询帖子列表（关联用户信息，置顶优先，按创建时间倒序） -->
+    <select id="selectPostPage" resultMap="PostListResultMap">
+        SELECT p.id, p.title, p.category, p.user_id,
+               u.nickname, u.avatar,
+               p.view_count, p.comment_count, p.is_top,
+               <if test="keyword != null and keyword != ''">
+               LEFT(p.content, 200) AS content,
+               </if>
+               <if test="keyword == null or keyword == ''">
+               NULL AS content,
+               </if>
+               DATE_FORMAT(p.create_time, '%Y-%m-%d %H:%i:%s') AS create_time
+        FROM post p
+        LEFT JOIN user u ON p.user_id = u.id
+        <where>
+            <if test="category != null">
+                AND p.category = #{category}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.title LIKE CONCAT('%', #{keyword}, '%') OR p.content LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY p.is_top DESC, p.create_time DESC
+    </select>
+
+    <!-- 分页查询热门帖子（按浏览量+评论数排序） -->
+    <select id="selectHotPostPage" resultMap="PostListResultMap">
+        SELECT p.id, p.title, p.category, p.user_id,
+               u.nickname, u.avatar,
+               p.view_count, p.comment_count, p.is_top,
+               DATE_FORMAT(p.create_time, '%Y-%m-%d %H:%i:%s') AS create_time
+        FROM post p
+        LEFT JOIN user u ON p.user_id = u.id
+        ORDER BY (p.view_count + p.comment_count * 10) DESC
+    </select>
+
+    <!-- 查询帖子详情（关联用户信息） -->
+    <select id="selectPostDetailById" resultMap="PostDetailResultMap">
+        SELECT p.id, p.title, p.content, p.category, p.user_id,
+               u.username, u.nickname, u.avatar, u.bloodline_grade, u.faction, u.yanling,
+               p.view_count, p.comment_count, p.is_top,
+               DATE_FORMAT(p.create_time, '%Y-%m-%d %H:%i:%s') AS create_time,
+               DATE_FORMAT(p.update_time, '%Y-%m-%d %H:%i:%s') AS update_time
+        FROM post p
+        LEFT JOIN user u ON p.user_id = u.id
+        WHERE p.id = #{id}
+    </select>
+
+    <!-- 分页查询指定用户帖子 -->
+    <select id="selectPostPageByUserId" resultMap="PostListResultMap">
+        SELECT p.id, p.title, p.category, p.user_id,
+               u.nickname, u.avatar,
+               p.view_count, p.comment_count, p.is_top,
+               DATE_FORMAT(p.create_time, '%Y-%m-%d %H:%i:%s') AS create_time
+        FROM post p
+        LEFT JOIN user u ON p.user_id = u.id
+        WHERE p.user_id = #{userId}
+        ORDER BY p.is_top DESC, p.create_time DESC
+    </select>
+
+    <!-- 帖子浏览量 +1 -->
+    <update id="incrementViewCount">
+        UPDATE post SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+    <!-- 帖子评论数 +1 -->
+    <update id="incrementCommentCount">
+        UPDATE post SET comment_count = comment_count + 1 WHERE id = #{id}
+    </update>
+
+    <!-- 帖子评论数 -1 -->
+    <update id="decrementCommentCount">
+        UPDATE post SET comment_count = GREATEST(comment_count - 1, 0) WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dragonraja.forum.mapper.CommentMapper">
+
+    <!-- CommentVO 结果映射（关联用户信息） -->
+    <resultMap id="CommentVOResultMap" type="com.dragonraja.forum.vo.CommentVO">
+        <id column="id" property="id"/>
+        <result column="post_id" property="postId"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="nickname" property="nickname"/>
+        <result column="avatar" property="avatar"/>
+        <result column="bloodline_grade" property="bloodlineGrade"/>
+        <result column="content" property="content"/>
+        <result column="reply_to_id" property="replyToId"/>
+        <result column="reply_to_username" property="replyToUsername"/>
+        <result column="reply_to_nickname" property="replyToNickname"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <!-- 分页查询帖子评论（关联用户信息，按创建时间正序） -->
+    <select id="selectCommentPage" resultMap="CommentVOResultMap">
+        SELECT c.id, c.post_id, c.user_id,
+               u.username, u.nickname, u.avatar, u.bloodline_grade,
+               c.content, c.reply_to_id,
+               ru.username AS reply_to_username, ru.nickname AS reply_to_nickname,
+               DATE_FORMAT(c.create_time, '%Y-%m-%d %H:%i:%s') AS create_time
+        FROM comment c
+        LEFT JOIN user u ON c.user_id = u.id
+        LEFT JOIN comment rc ON c.reply_to_id = rc.id
+        LEFT JOIN user ru ON rc.user_id = ru.id
+        WHERE c.post_id = #{postId}
+        ORDER BY c.create_time ASC
+    </select>
+
+</mapper>

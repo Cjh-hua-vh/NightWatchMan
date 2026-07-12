@@ -1,0 +1,113 @@
+/* ============================================
+   混血种社区 - CSS 变量定义
+   深色科幻龙族主题 + 毛玻璃半透明系统
+   ============================================ */
+
+:root {
+  /* 背景色系 */
+  --bg-primary: #0a0e27;        /* 主背景：深蓝黑 */
+  --bg-secondary: #1a1f3a;      /* 卡片背景（实底后备） */
+  --bg-tertiary: #16213e;       /* 边框/分割 */
+  --bg-hover: #1e2a4a;          /* hover背景 */
+
+  /* ===== 毛玻璃半透明系统（按重要程度三级递增） ===== */
+  /* light(12%): 最透，展示背景氛围 — 主内容表格、卡片、帖子流 */
+  /* medium(22%): 中等 — 筛选栏、次要信息面板、标签页 */
+  /* heavy(40%): 导航栏、顶栏、侧边栏、弹窗 */
+
+  --glass-light: rgba(10, 14, 39, 0.12);
+  --glass-light-border: rgba(255, 255, 255, 0.05);
+  --glass-light-blur: blur(8px);
+
+  --glass-ultralight: rgba(10, 14, 39, 0.02);  /* 极透：只给 PostCard 帖子卡片 */
+  --glass-ultralight-border: rgba(255, 255, 255, 0.04);
+  --glass-ultralight-blur: blur(10px);
+
+  --glass-medium: rgba(10, 14, 39, 0.22);
+  --glass-medium-border: rgba(255, 255, 255, 0.07);
+  --glass-medium-blur: blur(12px);
+
+  --glass-heavy: rgba(10, 14, 39, 0.40);
+  --glass-heavy-border: rgba(255, 255, 255, 0.09);
+  --glass-heavy-blur: blur(16px);
+
+  /* 强调色系 */
+  --accent-primary: #00d4ff;    /* 主强调：蓝光 */
+  --accent-secondary: #4da6ff;  /* 次级蓝 */
+  --accent-glow: rgba(0, 212, 255, 0.3);  /* 蓝光光晕 */
+  --accent-glow-soft: rgba(0, 212, 255, 0.15);
+
+  /* 文字色系 */
+  --text-primary: #f0f4fc;      /* 主文字 — 加厚适配毛玻璃 */
+  --text-secondary: #b8c1d6;    /* 次要文字 */
+  --text-muted: #8892ac;        /* 弱化文字 */
+  --text-shadow-glass: 0 1px 3px rgba(0, 0, 0, 0.5);  /* 毛玻璃文字阴影 */
+
+  /* 边框色 */
+  --border-color: #16213e;
+  --border-light: #233358;
+
+  /* 血统等级颜色 */
+  --grade-s: #ffd700;           /* S - 金色 */
+  --grade-a: #b388ff;           /* A - 紫色 */
+  --grade-b: #4da6ff;           /* B - 蓝色 */
+  --grade-c: #66bb6a;           /* C - 绿色 */
+  --grade-d: #8892b0;           /* D - 灰色 */
+
+  /* 金色微光 */
+  --gold-glow: rgba(255, 215, 0, 0.3);
+  --gold-glow-soft: rgba(255, 215, 0, 0.15);
+
+  /* 帖子分类颜色 */
+  --category-chat: #4da6ff;
+  --category-history: #b388ff;
+  --category-quest: #ff9800;
+  --category-exchange: #66bb6a;
+
+  /* 状态色 */
+  --success: #66bb6a;
+  --warning: #ff9800;
+  --danger: #f44336;
+  --info: #4da6ff;
+
+  /* 间距系统 */
+  --spacing-2xs: 2px;
+  --spacing-xs: 4px;
+  --spacing-xs-sm: 6px;
+  --spacing-sm: 8px;
+  --spacing-sm-md: 12px;
+  --spacing-md: 16px;
+  --spacing-md-lg: 20px;
+  --spacing-lg: 24px;
+  --spacing-lg-xl: 28px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+
+  /* 圆角 */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* 过渡 */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* 阴影 */
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 15px rgba(0, 212, 255, 0.25);
+  --shadow-glow-strong: 0 0 25px rgba(0, 212, 255, 0.4);
+  --shadow-gold: 0 0 12px rgba(255, 215, 0, 0.25);
+
+  /* 响应式断点 */
+  --breakpoint-xs: 360px;
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1440px;
+}

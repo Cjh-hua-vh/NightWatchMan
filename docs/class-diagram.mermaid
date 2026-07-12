@@ -1,0 +1,459 @@
+classDiagram
+    %% ============ 通用工具类 ============
+    class Result~T~ {
+        -Integer code
+        -String message
+        -T data
+        +success(T data) Result~T~
+        +success(String msg, T data) Result~T~
+        +error(int code, String msg) Result~T~
+        +error(String msg) Result~T~
+    }
+
+    class PageResult~T~ {
+        -List~T~ records
+        -Long total
+        -Long current
+        -Long size
+        +of(IPage~T~ page) PageResult~T~
+    }
+
+    class ResultCode {
+        SUCCESS 200
+        BAD_REQUEST 400
+        UNAUTHORIZED 401
+        FORBIDDEN 403
+        NOT_FOUND 404
+        SERVER_ERROR 500
+    }
+
+    class BusinessException {
+        -Integer code
+        -String message
+        +BusinessException(Integer code, String msg)
+        +BusinessException(String msg)
+    }
+
+    class GlobalExceptionHandler {
+        +handleBusinessException(BusinessException e) Result~Void~
+        +handleValidException(MethodArgumentNotValidException e) Result~Void~
+        +handleException(Exception e) Result~Void~
+    }
+
+    %% ============ 安全相关 ============
+    class JwtUtils {
+        -String SECRET
+        -long EXPIRATION
+        +generateToken(Long userId, String username, String role) String
+        +parseToken(String token) Claims
+        +isValid(String token) boolean
+    }
+
+    class JwtAuthenticationFilter {
+        -JwtUtils jwtUtils
+        +doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+        -isWhiteList(String path) boolean
+    }
+
+    class UserContext {
+        -ThreadLocal~UserInfo~ holder
+        +set(Long userId, String username, String role)
+        +getCurrentUserId() Long
+        +getCurrentRole() String
+        +clear()
+    }
+
+    %% ============ 枚举 ============
+    class UserStatus {
+        PENDING 0
+        NORMAL 1
+        BANNED 2
+        -Integer code
+        -String desc
+    }
+
+    class OnlineStatus {
+        OFFLINE 0
+        ONLINE 1
+        -Integer code
+        -String desc
+    }
+
+    class PostCategory {
+        CHAT 1
+        HISTORY 2
+        QUEST 3
+        EXCHANGE 4
+        -Integer code
+        -String desc
+    }
+
+    %% ============ 实体类 ============
+    class User {
+        -Long id
+        -String username
+        -String password
+        -String nickname
+        -String avatar
+        -String bloodlineGrade
+        -String faction
+        -Integer status
+        -Integer onlineStatus
+        -String role
+        -String signature
+        -LocalDateTime createTime
+        -LocalDateTime updateTime
+    }
+
+    class Post {
+        -Long id
+        -String title
+        -String content
+        -Integer category
+        -Long userId
+        -Integer viewCount
+        -Integer commentCount
+        -Integer isTop
+        -LocalDateTime createTime
+        -LocalDateTime updateTime
+    }
+
+    class Comment {
+        -Long id
+        -Long postId
+        -Long userId
+        -String content
+        -LocalDateTime createTime
+    }
+
+    class Announcement {
+        -Long id
+        -String title
+        -String content
+        -Integer isTop
+        -Long userId
+        -LocalDateTime createTime
+        -LocalDateTime updateTime
+    }
+
+    %% ============ Mapper 接口 ============
+    class UserMapper {
+        <<interface extends BaseMapper~User~>>
+        +selectByUsername(String username) User
+        +selectOnlineUsers() List~UserVO~
+    }
+
+    class PostMapper {
+        <<interface extends BaseMapper~Post~>>
+        +selectPostListPage(Page page, Integer category, String keyword) IPage~PostListVO~
+        +selectPostDetail(Long id) PostVO
+        +incrementViewCount(Long id) int
+    }
+
+    class CommentMapper {
+        <<interface extends BaseMapper~Comment~>>
+        +selectCommentPage(Page page, Long postId) IPage~CommentVO~
+    }
+
+    class AnnouncementMapper {
+        <<interface extends BaseMapper~Announcement~>>
+        +selectLatestTop() AnnouncementVO
+    }
+
+    %% ============ Service 接口 ============
+    class UserService {
+        <<interface extends IService~User~>>
+        +register(RegisterDTO dto) void
+        +login(LoginDTO dto) LoginVO
+        +getProfile(Long userId) UserVO
+        +updateProfile(Long userId, UpdateProfileDTO dto) void
+        +changePassword(Long userId, String oldPwd, String newPwd) void
+        +getOnlineUsers() List~UserVO~
+        +auditUser(Long id, AuditUserDTO dto) void
+        +banUser(Long id) void
+        +getUserPage(Page page, String keyword) IPage~UserVO~
+    }
+
+    class PostService {
+        <<interface extends IService~Post~>>
+        +create(PostDTO dto, Long userId) void
+        +update(Long id, PostDTO dto, Long userId) void
+        +delete(Long id, Long userId, String role) void
+        +getPostDetail(Long id) PostVO
+        +getPostPage(Integer category, String keyword, Integer current, Integer size) PageResult~PostListVO~
+        +getHotPosts() List~PostListVO~
+        +toggleTop(Long id) void
+    }
+
+    class CommentService {
+        <<interface extends IService~Comment~>>
+        +create(CommentDTO dto, Long userId) void
+        +delete(Long id, Long userId, String role) void
+        +getCommentPage(Long postId, Integer current, Integer size) PageResult~CommentVO~
+    }
+
+    class AnnouncementService {
+        <<interface extends IService~Announcement~>>
+        +create(AnnouncementDTO dto, Long userId) void
+        +update(Long id, AnnouncementDTO dto) void
+        +delete(Long id) void
+        +getLatest() AnnouncementVO
+        +getList() List~AnnouncementVO~
+    }
+
+    %% ============ Service 实现类 ============
+    class UserServiceImpl {
+        -UserMapper userMapper
+        -BCryptPasswordEncoder passwordEncoder
+        +register(RegisterDTO dto) void
+        +login(LoginDTO dto) LoginVO
+        +getProfile(Long userId) UserVO
+        +updateProfile(Long userId, UpdateProfileDTO dto) void
+        +getOnlineUsers() List~UserVO~
+        +auditUser(Long id, AuditUserDTO dto) void
+    }
+
+    class PostServiceImpl {
+        -PostMapper postMapper
+        -UserMapper userMapper
+        +create(PostDTO dto, Long userId) void
+        +getPostDetail(Long id) PostVO
+        +getPostPage(...) PageResult~PostListVO~
+        +getHotPosts() List~PostListVO~
+        +toggleTop(Long id) void
+    }
+
+    class CommentServiceImpl {
+        -CommentMapper commentMapper
+        -PostMapper postMapper
+        +create(CommentDTO dto, Long userId) void
+        +getCommentPage(Long postId, ...) PageResult~CommentVO~
+    }
+
+    class AnnouncementServiceImpl {
+        -AnnouncementMapper announcementMapper
+        +create(AnnouncementDTO dto, Long userId) void
+        +getLatest() AnnouncementVO
+        +getList() List~AnnouncementVO~
+    }
+
+    %% ============ Controller ============
+    class AuthController {
+        -UserService userService
+        +register(RegisterDTO dto) Result~Void~
+        +login(LoginDTO dto) Result~LoginVO~
+        +info() Result~UserVO~
+    }
+
+    class UserController {
+        -UserService userService
+        +getProfile() Result~UserVO~
+        +updateProfile(UpdateProfileDTO dto) Result~Void~
+        +changePassword(...) Result~Void~
+        +getOnlineUsers() Result~List~
+    }
+
+    class PostController {
+        -PostService postService
+        +list(Integer category, String keyword, Integer current, Integer size) Result~PageResult~
+        +hot() Result~List~
+        +detail(Long id) Result~PostVO~
+        +create(PostDTO dto) Result~Void~
+        +update(Long id, PostDTO dto) Result~Void~
+        +delete(Long id) Result~Void~
+        +toggleTop(Long id) Result~Void~
+    }
+
+    class CommentController {
+        -CommentService commentService
+        +list(Long postId, Integer current, Integer size) Result~PageResult~
+        +create(CommentDTO dto) Result~Void~
+        +delete(Long id) Result~Void~
+    }
+
+    class AnnouncementController {
+        -AnnouncementService announcementService
+        +list() Result~List~
+        +latest() Result~AnnouncementVO~
+        +create(AnnouncementDTO dto) Result~Void~
+        +update(Long id, AnnouncementDTO dto) Result~Void~
+        +delete(Long id) Result~Void~
+    }
+
+    class AdminController {
+        -UserService userService
+        -PostService postService
+        +userList(String keyword, Integer current, Integer size) Result~PageResult~
+        +auditUser(Long id, AuditUserDTO dto) Result~Void~
+        +banUser(Long id) Result~Void~
+        +postList(Integer current, Integer size) Result~PageResult~
+        +deletePost(Long id) Result~Void~
+    }
+
+    %% ============ DTO ============
+    class LoginDTO {
+        -String username
+        -String password
+    }
+
+    class RegisterDTO {
+        -String username
+        -String password
+        -String nickname
+        -String bloodlineGrade
+        -String faction
+    }
+
+    class PostDTO {
+        -String title
+        -String content
+        -Integer category
+    }
+
+    class CommentDTO {
+        -Long postId
+        -String content
+    }
+
+    class AnnouncementDTO {
+        -String title
+        -String content
+        -Integer isTop
+    }
+
+    class UpdateProfileDTO {
+        -String nickname
+        -String avatar
+        -String signature
+        -String bloodlineGrade
+        -String faction
+    }
+
+    class AuditUserDTO {
+        -Integer status
+    }
+
+    %% ============ VO ============
+    class LoginVO {
+        -String token
+        -Long userId
+        -String username
+        -String nickname
+        -String role
+        -String avatar
+    }
+
+    class UserVO {
+        -Long id
+        -String username
+        -String nickname
+        -String avatar
+        -String bloodlineGrade
+        -String faction
+        -Integer status
+        -Integer onlineStatus
+        -String role
+        -String signature
+        -String createTime
+    }
+
+    class PostVO {
+        -Long id
+        -String title
+        -String content
+        -Integer category
+        -String categoryDesc
+        -Long userId
+        -String username
+        -String nickname
+        -String avatar
+        -String bloodlineGrade
+        -Integer viewCount
+        -Integer commentCount
+        -Integer isTop
+        -String createTime
+    }
+
+    class PostListVO {
+        -Long id
+        -String title
+        -Integer category
+        -String categoryDesc
+        -String nickname
+        -String avatar
+        -Integer viewCount
+        -Integer commentCount
+        -Integer isTop
+        -String createTime
+    }
+
+    class CommentVO {
+        -Long id
+        -Long postId
+        -Long userId
+        -String username
+        -String nickname
+        -String avatar
+        -String bloodlineGrade
+        -String content
+        -String createTime
+    }
+
+    class AnnouncementVO {
+        -Long id
+        -String title
+        -String content
+        -Integer isTop
+        -String createTime
+        -String updateTime
+    }
+
+    %% ============ 关系 ============
+    GlobalExceptionHandler ..> BusinessException : catches
+    GlobalExceptionHandler ..> Result : returns
+    JwtAuthenticationFilter ..> JwtUtils : uses
+    JwtAuthenticationFilter ..> UserContext : writes
+    UserContext ..> Result : no direct relation
+
+    UserServiceImpl ..|> UserService : implements
+    PostServiceImpl ..|> PostService : implements
+    CommentServiceImpl ..|> CommentService : implements
+    AnnouncementServiceImpl ..|> AnnouncementService : implements
+
+    UserServiceImpl --> UserMapper : uses
+    PostServiceImpl --> PostMapper : uses
+    PostServiceImpl --> UserMapper : uses
+    CommentServiceImpl --> CommentMapper : uses
+    CommentServiceImpl --> PostMapper : uses
+    AnnouncementServiceImpl --> AnnouncementMapper : uses
+
+    UserMapper --> User : operates
+    PostMapper --> Post : operates
+    CommentMapper --> Comment : operates
+    AnnouncementMapper --> Announcement : operates
+
+    AuthController --> UserService : calls
+    UserController --> UserService : calls
+    PostController --> PostService : calls
+    CommentController --> CommentService : calls
+    AnnouncementController --> AnnouncementService : calls
+    AdminController --> UserService : calls
+    AdminController --> PostService : calls
+
+    AuthController ..> LoginDTO : receives
+    AuthController ..> RegisterDTO : receives
+    AuthController ..> LoginVO : returns
+    UserController ..> UpdateProfileDTO : receives
+    UserController ..> UserVO : returns
+    PostController ..> PostDTO : receives
+    PostController ..> PostVO : returns
+    PostController ..> PostListVO : returns
+    CommentController ..> CommentDTO : receives
+    CommentController ..> CommentVO : returns
+    AnnouncementController ..> AnnouncementDTO : receives
+    AnnouncementController ..> AnnouncementVO : returns
+    AdminController ..> AuditUserDTO : receives
+
+    Post --> PostCategory : uses
+    User --> UserStatus : uses
+    User --> OnlineStatus : uses
