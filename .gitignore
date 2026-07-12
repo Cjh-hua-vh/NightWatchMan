@@ -16,6 +16,10 @@ dist/
 # MySQL 实时数据（用 backup.sql 还原即可）
 mysql_data/
 
+# 上传文件（头像、帖子图片等，不纳入版本控制）
+uploads/
+dragon-raja-server/uploads/
+
 # 环境变量
 .env.local
 .env.*.local
