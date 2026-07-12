@@ -3,10 +3,10 @@ import { ElMessage } from 'element-plus'
 import router from '../router'
 import { getImageUrl } from '../utils/format'
 
-// 自动判断：公网用 cpolar 后端，本机用 Vite 代理
-const isPublic = typeof window !== 'undefined' && window.location.hostname.includes('cpolar.top')
+// 公网访问时使用环境变量指定的后端地址（内网穿透请配 .env.local）
+const isPublic = typeof window !== 'undefined' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')
 const BASE_URL = isPublic
-  ? 'https://6563181d.r5.cpolar.top/api'
+  ? (import.meta.env.VITE_PUBLIC_API_URL || '/api')
   : '/api'
 
 const service = axios.create({

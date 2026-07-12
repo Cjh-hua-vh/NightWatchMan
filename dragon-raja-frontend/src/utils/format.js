@@ -166,11 +166,9 @@ export function getImageUrl(path) {
   if (import.meta.env.DEV) {
     return path
   }
-  // 生产模式：根据访问域名拼接后端地址
-  const publicBackendUrl =
-    typeof window !== 'undefined' && window.location.hostname.includes('cpolar.top')
-      ? 'https://6563181d.r5.cpolar.top'
-      : ''
+  // 公网访问时使用环境变量指定的后端地址（内网穿透请配 .env.local）
+  const isPublic = typeof window !== 'undefined' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')
+  const publicBackendUrl = isPublic ? (import.meta.env.VITE_PUBLIC_API_BASE || '') : ''
   const backendUrl = publicBackendUrl || import.meta.env.VITE_BACKEND_URL || ''
   if (path.startsWith('/uploads/')) return backendUrl ? backendUrl + path : path
   if (path.startsWith('/api/')) return path

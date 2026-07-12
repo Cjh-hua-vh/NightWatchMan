@@ -38,4 +38,4 @@ logging:
     com.baomidou.mybatisplus: info
 
 file:
-  upload-dir: C:/Users/Administrator/Desktop/springBoot/NightWatchMan/dragon-raja-server/uploads
+  upload-dir: D:/DaiMa/NightWatchMan/dragon-raja-server/uploads
