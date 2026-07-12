@@ -1,4 +1,4 @@
-# 卡塞尔之门（NightWatchMan）
+# 卡塞尔之门（The Gate to Cassell）
 
 龙族守夜人讨论区 —— 卡塞尔学院在线社区论坛。
 
@@ -17,7 +17,7 @@
 - **Node.js 18+** / npm
 - **MySQL 8.0**（已安装并运行，root 密码推荐设为 `root`，或自行修改 `application.yml`）
 
-## 快速启动
+## 本地启动流程
 
 ### 1. 导入数据库
 
