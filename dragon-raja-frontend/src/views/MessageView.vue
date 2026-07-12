@@ -1,5 +1,5 @@
 <template>
-  <div class="message-view">
+  <div class="message-view" style="background: rgba(255,255,255,0.04); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px)">
     <div class="page-header">
       <div class="page-header-left">
         <el-icon class="page-icon"><Message /></el-icon>
@@ -85,25 +85,10 @@
           </div>
         </div>
       </el-tab-pane>
-
-      <!-- 已发送 -->
-      <el-tab-pane label="已发送" name="sent">
-        <div v-loading="sentLoading">
-          <div v-if="sentMessages.length === 0" class="empty"><el-empty description="暂无已发送邮件" /></div>
-          <div v-for="msg in sentMessages" :key="msg.id" class="msg-item">
-            <div class="msg-header">
-              <span class="msg-from">收件人：{{ msg.receiverName || '用户' + msg.receiverId }}</span>
-              <span class="msg-time">{{ formatDateTime(msg.createTime) }}</span>
-            </div>
-            <div class="msg-title">{{ msg.title }}</div>
-            <div class="msg-content">{{ msg.content }}</div>
-            <a class="msg-delete-link" @click.stop.prevent="handleDelete(msg.id)">删除</a>
-          </div>
-        </div>
-      </el-tab-pane>
     </el-tabs>
+  </div>
 
-    <!-- 邮件详情弹窗 -->
+  <!-- 邮件详情弹窗 -->
     <div v-if="detailMsg" class="msg-detail-overlay" @click="detailMsg = null">
       <div class="msg-detail-dialog" @click.stop>
         <div class="msg-detail-header">
@@ -136,11 +121,10 @@
         </div>
       </div>
     </div>
-  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Close, Message } from '@element-plus/icons-vue'
@@ -162,8 +146,6 @@ const loading = ref(false), messages = ref([]), total = ref(0), currentPage = re
 const friendList = ref([]), composeTo = ref(null), composeTitle = ref(''), composeContent = ref(''), sending = ref(false)
 // broadcast
 const broadcastTitle = ref(''), broadcastContent = ref(''), broadcasting = ref(false)
-// sent
-const sentLoading = ref(false), sentMessages = ref([])
 // 批量管理
 const batchMode = ref(false)
 const selectedIds = ref([])
@@ -182,14 +164,6 @@ async function loadInbox() {
     messages.value = res.data?.records || []
     total.value = res.data?.total || 0
   } catch { /* */ } finally { loading.value = false }
-}
-
-async function loadSent() {
-  sentLoading.value = true
-  try {
-    const res = await request({ url: '/message/sent', method: 'get', params: { current: 1, size: 50 } })
-    sentMessages.value = res.data?.records || []
-  } catch { /* */ } finally { sentLoading.value = false }
 }
 
 async function loadFriends() {
@@ -297,7 +271,6 @@ async function handleCompose() {
     await request({ url: '/message/send', method: 'post', data: { receiverId: composeTo.value, title: composeTitle.value, content: composeContent.value } })
     ElMessage.success('发送成功')
     composeTo.value = null; composeTitle.value = ''; composeContent.value = ''
-    loadSent()
   } catch { /* */ } finally { sending.value = false }
 }
 
@@ -355,16 +328,15 @@ onMounted(async () => {
   }
 })
 onUnmounted(() => { if (msgTimer) clearInterval(msgTimer) })
+
+// 邮件详情打开时锁定body滚动
+watch(detailMsg, (v) => { document.body.style.overflow = v ? 'hidden' : '' })
 </script>
 
 <style scoped>
 .message-view {
   max-width: 800px;
   margin: 0 auto;
-  background: var(--glass-light);
-  backdrop-filter: var(--glass-light-blur);
-  -webkit-backdrop-filter: var(--glass-light-blur);
-  border: 1px solid var(--glass-light-border);
   border-radius: var(--radius-xl);
   padding: var(--spacing-lg);
 }
@@ -543,7 +515,7 @@ onUnmounted(() => { if (msgTimer) clearInterval(msgTimer) })
   
   .msg-detail-overlay {
     padding: var(--spacing-sm);
-    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   
   .msg-detail-dialog {

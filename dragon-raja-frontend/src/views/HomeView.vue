@@ -580,16 +580,16 @@ onBeforeRouteLeave((to, from, next) => {
   .center-panel {
     border-radius: var(--radius-md);
   }
-  
+
   .category-filter {
     gap: var(--spacing-xs);
   }
-  
+
   .filter-tag {
     padding: 3px 10px;
     font-size: 12px;
   }
-  
+
   .post-tabs {
     margin-bottom: var(--spacing-sm);
   }

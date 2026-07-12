@@ -9,7 +9,7 @@
       <el-tab-pane label="好友列表" name="list">
         <div v-if="friends.length === 0" class="empty"><el-empty description="暂无好友" /></div>
         <div class="friend-grid">
-          <div v-for="f in friends" :key="f.friendId" class="friend-card">
+          <div v-for="f in pagedFriends" :key="f.friendId" class="friend-card">
             <div class="friend-click" @click="goProfile(f)">
               <UserCard :user="f" :size="48" @click.stop />
               <div class="friend-info">
@@ -23,6 +23,16 @@
               <el-button size="small" type="danger" text @click="handleRemove(f)">删除</el-button>
             </div>
           </div>
+        </div>
+        <div class="friend-pagination" v-if="friendTotal > friendPageSize">
+          <el-pagination
+            v-model:current-page="friendPage"
+            :page-size="friendPageSize"
+            :total="friendTotal"
+            layout="prev, pager, next"
+            small
+            background
+          />
         </div>
       </el-tab-pane>
 
@@ -85,7 +95,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Search, Loading, UserFilled } from '@element-plus/icons-vue'
@@ -97,6 +107,13 @@ import request from '../api/request'
 const router = useRouter()
 const tab = ref('list')
 const friends = ref([])
+const friendPage = ref(1)
+const friendPageSize = ref(8)
+const pagedFriends = computed(() => {
+  const start = (friendPage.value - 1) * friendPageSize.value
+  return friends.value.slice(start, start + friendPageSize.value)
+})
+const friendTotal = computed(() => friends.value.length)
 const requests = ref([])
 
 // 搜索添加好友
@@ -148,16 +165,20 @@ async function handleApply(friendId) {
 let friendTimer = null
 onMounted(() => { loadFriends(); loadRequests(); friendTimer = setInterval(() => { loadFriends(); loadRequests() }, 10000) })
 onUnmounted(() => { if (friendTimer) clearInterval(friendTimer) })
+
+// 切换标签或好友数变化时重置页码
+watch(friendTotal, (n) => { if (n <= (friendPage.value - 1) * friendPageSize.value) friendPage.value = 1 })
+watch(tab, () => { friendPage.value = 1 })
 </script>
 
 <style scoped>
 .friends-view {
   max-width: 800px;
   margin: 0 auto;
-  background: var(--glass-light);
-  backdrop-filter: var(--glass-light-blur);
-  -webkit-backdrop-filter: var(--glass-light-blur);
-  border: 1px solid var(--glass-light-border);
+  background: rgba(10, 14, 39, 0.08);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: var(--radius-xl);
   padding: var(--spacing-lg);
 }
@@ -189,6 +210,8 @@ onUnmounted(() => { if (friendTimer) clearInterval(friendTimer) })
 .friend-grade { font-size: 12px; font-weight: 600; }
 .friend-faction { font-size: 12px; color: var(--text-secondary); }
 .friend-actions { display: flex; justify-content: flex-end; gap: var(--spacing-xs); margin-top: var(--spacing-sm); padding-top: var(--spacing-sm); border-top: 1px solid var(--border-subtle); }
+
+.friend-pagination { display: flex; justify-content: center; margin-top: var(--spacing-lg); }
 
 .request-item {
   display: flex; align-items: center; gap: var(--spacing-md);

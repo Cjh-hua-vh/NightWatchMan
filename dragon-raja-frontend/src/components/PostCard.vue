@@ -1,5 +1,5 @@
 <template>
-  <div class="post-card scroll-reveal" @click="goDetail" ref="cardRef">
+  <div class="post-card scroll-reveal" @click="goDetail" ref="cardRef" :style="isMobile ? { background: 'rgba(10,14,39,0.3)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' } : {}">
     <!-- 置顶标识 -->
     <div class="pin-badge" v-if="post.isTop === 1">
       <el-icon class="pin-icon"><Top /></el-icon>
@@ -64,6 +64,12 @@ import { useRouter } from 'vue-router'
 import { Top, View, ChatDotRound } from '@element-plus/icons-vue'
 import { getCategoryColor, getCategoryName, formatRelativeTime, highlightText } from '../utils/format'
 import UserCard from './UserCard.vue'
+
+// 手机端检测
+const isMobile = ref(window.innerWidth <= 768)
+const onResize = () => { isMobile.value = window.innerWidth <= 768 }
+onMounted(() => { window.addEventListener('resize', onResize) })
+onUnmounted(() => { window.removeEventListener('resize', onResize) })
 
 const props = defineProps({
   post: {

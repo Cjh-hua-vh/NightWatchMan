@@ -397,7 +397,7 @@ onMounted(() => {
 
 @media (max-width: 767px) {
   .post-create-view { padding: 0 var(--spacing-sm); }
-  .create-card { border-radius: 0; border-left: none; border-right: none; padding: var(--spacing-md); }
+  .create-card { border-radius: var(--radius-lg); padding: var(--spacing-md); }
   /* 移动端：label 顶置到上方，表单内容居中 */
   .create-form :deep(.el-form-item) { flex-direction: column; align-items: stretch; }
   .create-form :deep(.el-form-item__label) { width: auto !important; text-align: left; padding: 0 0 6px 0; }

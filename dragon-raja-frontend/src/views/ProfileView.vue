@@ -253,10 +253,7 @@ async function handleAvatarUpload(options) {
     const avatarUrl = res.data
     profileForm.avatar = avatarUrl
     profile.value.avatar = avatarUrl
-    userStore.updateUserInfo({ avatar: avatarUrl })
-    await updateProfile({ avatar: avatarUrl })
     options.onSuccess(res)
-    ElMessage.success('头像更新成功')
   } catch (err) {
     console.error('头像上传失败:', err)
     options.onError(err)
