@@ -31,11 +31,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -54,6 +59,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final MessageMapper messageMapper;
     private final FriendMapper friendMapper;
     private final JwtUtils jwtUtils;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     /** BCrypt 密码编码器 */
     private static final BCryptPasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
@@ -187,6 +195,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             user.setNickname(dto.getNickname());
         }
         if (StringUtils.hasText(dto.getAvatar())) {
+            // 删除旧头像文件
+            String oldAvatar = user.getAvatar();
+            if (oldAvatar != null && oldAvatar.startsWith("/uploads/avatars/")) {
+                try {
+                    Path oldFile = Paths.get(uploadDir, "avatars", oldAvatar.replace("/uploads/avatars/", ""));
+                    Files.deleteIfExists(oldFile);
+                    log.info("已删除旧头像文件: {}", oldFile);
+                } catch (IOException e) {
+                    log.warn("删除旧头像文件失败: {} - {}", oldAvatar, e.getMessage());
+                }
+            }
             user.setAvatar(dto.getAvatar());
         }
         if (dto.getSignature() != null) {

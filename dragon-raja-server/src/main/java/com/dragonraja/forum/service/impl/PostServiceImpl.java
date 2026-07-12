@@ -20,9 +20,16 @@ import com.dragonraja.forum.vo.PostListVO;
 import com.dragonraja.forum.vo.PostVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,6 +50,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final PostMapper postMapper;
     private final PostImageMapper postImageMapper;
     private final PostViewMapper postViewMapper;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     @Override
     public PageResult<PostListVO> getPostPage(Long current, Long size, Integer category, String keyword) {
@@ -162,7 +172,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         postMapper.updateById(post);
 
-        // 更新图片：先删旧图，再插入新图
+        // 更新图片：先删旧 DB 记录和旧文件，再插入新图
+        List<PostImage> oldImages = postImageMapper.selectByPostId(id);
+        deletePostImageFiles(oldImages);
         postImageMapper.deleteByPostId(id);
         if (dto.getImages() != null && !dto.getImages().isEmpty()) {
             int order = 0;
@@ -190,6 +202,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             throw new BusinessException(403, "无权删除他人的帖子");
         }
 
+        // 删除帖子图片文件
+        List<PostImage> images = postImageMapper.selectByPostId(id);
+        deletePostImageFiles(images);
+
         postMapper.deleteById(id);
         log.info("删除帖子成功: id={}, userId={}", id, userId);
     }
@@ -213,6 +229,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         if (post == null) {
             throw new BusinessException(404, "帖子不存在");
         }
+
+        // 删除帖子图片文件
+        List<PostImage> images = postImageMapper.selectByPostId(id);
+        deletePostImageFiles(images);
 
         postMapper.deleteById(id);
         log.info("管理员删除帖子: id={}, operator={}", id, UserContext.getCurrentUsername());
@@ -292,5 +312,22 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             List<String> urls = imageMap.get(vo.getId());
             vo.setImages(urls != null ? urls : Collections.emptyList());
         });
+    }
+
+    /** 删除帖子图片文件 */
+    private void deletePostImageFiles(List<PostImage> images) {
+        if (images == null || images.isEmpty()) return;
+        for (PostImage img : images) {
+            try {
+                String url = img.getUrl();
+                if (url != null && url.startsWith("/uploads/posts/")) {
+                    Path filePath = Paths.get(uploadDir, "posts", url.replace("/uploads/posts/", ""));
+                    Files.deleteIfExists(filePath);
+                    log.debug("删除帖子图片文件: {}", filePath);
+                }
+            } catch (IOException e) {
+                log.warn("删除帖子图片文件失败: {} - {}", img.getUrl(), e.getMessage());
+            }
+        }
     }
 }
