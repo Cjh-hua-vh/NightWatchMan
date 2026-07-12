@@ -42,3 +42,11 @@ export function adminDeleteComment(id) {
     method: 'delete'
   })
 }
+
+export function adminUpdateComment(id, content) {
+  return request({
+    url: `/comments/admin/${id}`,
+    method: 'put',
+    data: { content }
+  })
+}

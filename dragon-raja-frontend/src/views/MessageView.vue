@@ -1,5 +1,5 @@
 <template>
-  <div class="message-view" style="background: rgba(255,255,255,0.04); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px)">
+  <div class="message-view" style="background: rgba(10,14,39,0.12); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.05)">
     <div class="page-header">
       <div class="page-header-left">
         <el-icon class="page-icon"><Message /></el-icon>
@@ -7,7 +7,7 @@
       </div>
       <div class="page-header-right">
         <el-button size="small" text @click="handleMarkAllRead" :disabled="messages.length === 0">全部已读</el-button>
-        <div class="hint-text" v-if="messages.length > 0 && !batchMode">💡 长按邮件可进入批量管理模式</div>
+        <div class="hint-text" v-if="messages.length > 0 && !batchMode">长按邮件可进入批量管理模式</div>
       </div>
     </div>
     <el-tabs v-model="tab">
@@ -89,6 +89,7 @@
   </div>
 
   <!-- 邮件详情弹窗 -->
+  <Transition name="msg-detail">
     <div v-if="detailMsg" class="msg-detail-overlay" @click="detailMsg = null">
       <div class="msg-detail-dialog" @click.stop>
         <div class="msg-detail-header">
@@ -121,6 +122,7 @@
         </div>
       </div>
     </div>
+  </Transition>
 </template>
 
 <script setup>
@@ -401,9 +403,9 @@ watch(detailMsg, (v) => { document.body.style.overflow = v ? 'hidden' : '' })
 .msg-item {
   position: relative;
   display: flex; gap: var(--spacing-sm);
-  background: var(--glass-light); border: 1px solid var(--glass-light-border);
-  backdrop-filter: var(--glass-light-blur);
-  -webkit-backdrop-filter: var(--glass-light-blur);
+  background: rgba(10, 14, 39, 0.12); border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-radius: var(--radius-md); padding: var(--spacing-md);
   margin-bottom: var(--spacing-sm); cursor: pointer;
   transition: background var(--transition-fast);
@@ -547,5 +549,15 @@ watch(detailMsg, (v) => { document.body.style.overflow = v ? 'hidden' : '' })
   padding: var(--spacing-sm) 0;
 }
 
-@media (max-width: 768px) { .message-view { max-width: 100%; padding: 0; } .msg-item { border-radius: 0; } .page-header { flex-direction: column; align-items: flex-start; gap: 4px; } }
+@media (max-width: 768px) { .message-view { max-width: 100%; padding: 0; } .page-header { flex-direction: column; align-items: flex-start; gap: 4px; } }
+
+/* 邮件详情弹窗动画 */
+.msg-detail-enter-active { transition: opacity 0.25s ease; }
+.msg-detail-enter-active .msg-detail-dialog { transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease; }
+.msg-detail-leave-active { transition: opacity 0.2s ease; }
+.msg-detail-leave-active .msg-detail-dialog { transition: transform 0.2s ease, opacity 0.15s ease; }
+.msg-detail-enter-from { opacity: 0; }
+.msg-detail-enter-from .msg-detail-dialog { transform: scale(0.9) translateY(20px); opacity: 0; }
+.msg-detail-leave-to { opacity: 0; }
+.msg-detail-leave-to .msg-detail-dialog { transform: scale(0.95); opacity: 0; }
 </style>

@@ -148,4 +148,15 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         postMapper.decrementCommentCount(comment.getPostId());
         log.info("管理员删除评论: commentId={}, operator={}", id, UserContext.getCurrentUsername());
     }
+
+    @Override
+    public void adminUpdateComment(Long id, String content) {
+        Comment comment = commentMapper.selectById(id);
+        if (comment == null) {
+            throw new BusinessException(404, "评论不存在");
+        }
+        comment.setContent(content);
+        commentMapper.updateById(comment);
+        log.info("管理员编辑评论: commentId={}, operator={}", id, UserContext.getCurrentUsername());
+    }
 }

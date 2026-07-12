@@ -50,4 +50,7 @@ public interface CommentService extends IService<Comment> {
      * @param id 评论ID
      */
     void adminDeleteComment(Long id);
+
+    /** 管理员编辑评论内容 */
+    void adminUpdateComment(Long id, String content);
 }

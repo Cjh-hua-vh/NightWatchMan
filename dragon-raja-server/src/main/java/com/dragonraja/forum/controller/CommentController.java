@@ -8,6 +8,7 @@ import com.dragonraja.forum.security.UserContext;
 import com.dragonraja.forum.service.CommentService;
 import com.dragonraja.forum.vo.CommentVO;
 import jakarta.validation.Valid;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -76,6 +77,23 @@ public class CommentController {
         }
         commentService.deleteComment(id, userId);
         return Result.success("删除成功");
+    }
+
+    /**
+     * 管理员编辑评论
+     * 管理员可强制修改任何评论内容
+     */
+    @PutMapping("/admin/{id}")
+    public Result<Void> adminUpdateComment(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        if (!UserContext.isAdmin()) {
+            throw BusinessException.forbidden("仅管理员可编辑评论");
+        }
+        String content = body.get("content");
+        if (content == null || content.isBlank()) {
+            return Result.error(400, "评论内容不能为空");
+        }
+        commentService.adminUpdateComment(id, content);
+        return Result.success("评论已更新");
     }
 
     /**

@@ -51,6 +51,7 @@
               {{ row.isTop === 1 ? '取消置顶' : '置顶' }}
             </el-button>
             <el-button type="success" size="small" @click="openEditDialog(row)">编辑</el-button>
+            <el-button type="info" size="small" @click="openCommentDialog(row)">评论</el-button>
             <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </div>
         </template>
@@ -97,6 +98,34 @@
         <el-button type="primary" :loading="saving" @click="handleEditSave">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- 评论管理弹窗 -->
+    <el-dialog v-model="commentDialogVisible" title="评论管理" width="700px" :close-on-click-modal="false">
+      <div v-if="commentLoading" v-loading="commentLoading" style="min-height: 100px"></div>
+      <div v-else-if="comments.length === 0" class="empty-hint">暂无评论</div>
+      <div v-else class="comment-list">
+        <div v-for="c in comments" :key="c.id" class="comment-item">
+          <template v-if="editingCommentId === c.id">
+            <el-input v-model="editCommentContent" type="textarea" :rows="3" />
+            <div class="comment-edit-actions">
+              <el-button size="small" @click="editingCommentId = null">取消</el-button>
+              <el-button size="small" type="primary" @click="handleCommentUpdate(c.id)">保存</el-button>
+            </div>
+          </template>
+          <template v-else>
+            <div class="comment-top">
+              <span class="comment-user">{{ c.nickname || c.username }}</span>
+              <span class="comment-time">{{ formatDateTime(c.createTime) }}</span>
+            </div>
+            <div class="comment-content">{{ c.content }}</div>
+            <div class="comment-actions">
+              <el-button size="small" text @click="startEditComment(c)">编辑</el-button>
+              <el-button size="small" text type="danger" @click="handleCommentDelete(c.id)">删除</el-button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -107,6 +136,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Document, Plus, Close } from '@element-plus/icons-vue'
 import { getAdminPosts, adminDeletePost, adminUpdatePost } from '../../api/admin'
 import { toggleTop, getPostDetail } from '../../api/post'
+import { getComments, adminDeleteComment, adminUpdateComment } from '../../api/comment'
 import { uploadPostImage } from '../../api/file'
 import { getCategoryColor, getCategoryName, formatDateTime } from '../../utils/format'
 import Pagination from '../../components/Pagination.vue'
@@ -122,6 +152,51 @@ const saving = ref(false)
 const editLoading = ref(false)
 const editDialogVisible = ref(false)
 const editForm = ref({ id: null, title: '', content: '', category: 1, images: [] })
+
+// 评论管理
+const commentDialogVisible = ref(false)
+const commentLoading = ref(false)
+const comments = ref([])
+const editingCommentId = ref(null)
+const editCommentContent = ref('')
+const currentPostId = ref(null)
+
+async function openCommentDialog(row) {
+  currentPostId.value = row.id
+  commentDialogVisible.value = true
+  commentLoading.value = true
+  comments.value = []
+  editingCommentId.value = null
+  try {
+    const res = await getComments(row.id, { current: 1, size: 100 })
+    comments.value = res.data?.records || []
+  } catch { /* */ } finally { commentLoading.value = false }
+}
+
+function startEditComment(c) {
+  editingCommentId.value = c.id
+  editCommentContent.value = c.content
+}
+
+async function handleCommentUpdate(id) {
+  if (!editCommentContent.value.trim()) return ElMessage.warning('内容不能为空')
+  try {
+    await adminUpdateComment(id, editCommentContent.value)
+    const c = comments.value.find(x => x.id === id)
+    if (c) c.content = editCommentContent.value
+    editingCommentId.value = null
+    ElMessage.success('评论已更新')
+  } catch { ElMessage.error('编辑失败') }
+}
+
+async function handleCommentDelete(id) {
+  try {
+    await ElMessageBox.confirm('确定删除该评论？', '提示', { type: 'warning' })
+    await adminDeleteComment(id)
+    comments.value = comments.value.filter(c => c.id !== id)
+    ElMessage.success('评论已删除')
+  } catch { /* cancelled */ }
+}
 
 async function openEditDialog(row) {
   editDialogVisible.value = true
@@ -255,4 +330,16 @@ onMounted(() => { loadPosts() })
   .op-actions .el-button { padding: 2px 6px !important; font-size: 11px !important; min-height: 20px !important; margin: 0 !important; }
   :deep(.el-table__fixed-right) { box-shadow: -4px 0 8px rgba(0, 0, 0, 0.25); }
 }
+
+/* 评论管理 */
+.comment-list { max-height: 400px; overflow-y: auto; }
+.comment-item { padding: var(--spacing-md); border-bottom: 1px solid var(--border-color); }
+.comment-item:last-child { border-bottom: none; }
+.comment-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.comment-user { color: var(--accent-primary); font-weight: 600; font-size: 13px; }
+.comment-time { color: var(--text-muted); font-size: 12px; }
+.comment-content { color: var(--text-primary); font-size: 14px; line-height: 1.5; margin-bottom: 8px; }
+.comment-actions { display: flex; gap: 4px; }
+.comment-edit-actions { display: flex; gap: 8px; margin-top: 8px; justify-content: flex-end; }
+.empty-hint { text-align: center; color: var(--text-muted); padding: 60px 0; }
 </style>
