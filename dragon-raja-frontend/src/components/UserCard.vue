@@ -34,7 +34,7 @@
       <div class="card-details">
         <div class="detail-row" v-if="user.yanling">
           <span class="detail-label">言灵</span>
-          <span class="detail-value yanling-value">{{ user.yanling }}</span>
+          <span class="detail-value yanling-value">{{ formatYanling(user.yanling) }}</span>
         </div>
         <div class="detail-row" v-if="user.signature">
           <span class="detail-label">签名</span>
@@ -63,7 +63,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getGradeColor, formatDate } from '../utils/format'
+import { getGradeColor, formatDate, formatYanling } from '../utils/format'
 import { useUserStore } from '../stores/user'
 import request from '../api/request'
 import { checkFriend } from '../api/friend'

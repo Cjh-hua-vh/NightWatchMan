@@ -42,7 +42,7 @@
               </div>
               <div class="author-tags">
                 <span v-if="post.faction" class="faction-tag">{{ post.faction }}</span>
-                <span v-if="post.yanling" class="yanling-tag">{{ post.yanling }}</span>
+                <span v-if="post.yanling" class="yanling-tag">{{ formatYanling(post.yanling) }}</span>
               </div>
             </div>
           </div>
@@ -123,7 +123,7 @@ import {
 } from '@element-plus/icons-vue'
 import { useUserStore } from '../stores/user'
 import { getPostDetail, deletePost } from '../api/post'
-import { getCategoryColor, getCategoryName, getGradeColor, formatDateTime } from '../utils/format'
+import { getCategoryColor, getCategoryName, getGradeColor, formatDateTime, formatYanling } from '../utils/format'
 import UserCard from '../components/UserCard.vue'
 import CommentSection from '../components/CommentSection.vue'
 

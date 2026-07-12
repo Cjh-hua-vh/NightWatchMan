@@ -174,3 +174,12 @@ export function getImageUrl(path) {
   if (path.startsWith('/api/')) return path
   return path
 }
+
+/**
+ * 格式化言灵显示：移除序列号后缀
+ * 将 "言灵·皇帝 · 序列号001" 转换为 "言灵·皇帝"
+ */
+export function formatYanling(yanling) {
+  if (!yanling) return ''
+  return yanling.replace(/\s*·\s*序列号\d+$/, '').trim()
+}

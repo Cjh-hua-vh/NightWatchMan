@@ -14,7 +14,7 @@
             <span v-if="profile.faction" class="faction-text">{{ profile.faction }}</span>
           </div>
           <div class="info-username">@{{ profile.username }}</div>
-          <div class="info-yanling" v-if="profile.yanling">🔥 言灵：<span class="yanling-text">{{ profile.yanling }}</span></div>
+          <div class="info-yanling" v-if="profile.yanling">言灵：<span class="yanling-text">{{ formatYanling(profile.yanling) }}</span></div>
           <div class="info-signature" v-if="profile.signature">{{ profile.signature }}</div>
           <div class="info-time">注册时间：{{ formatDate(profile.createTime) }}</div>
         </div>
@@ -38,7 +38,7 @@ import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getProfile } from '../api/user'
 import { getUserPosts } from '../api/post'
-import { getGradeColor, formatDate } from '../utils/format'
+import { getGradeColor, formatDate, formatYanling } from '../utils/format'
 import PostCard from '../components/PostCard.vue'
 import Pagination from '../components/Pagination.vue'
 

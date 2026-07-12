@@ -20,7 +20,7 @@
           </div>
           <div class="info-username">@{{ profile.username }}</div>
           <div class="info-yanling" v-if="profile.yanling">
-            言灵：<span class="yanling-text">{{ profile.yanling }}</span>
+            言灵：<span class="yanling-text">{{ formatYanling(profile.yanling) }}</span>
           </div>
           <div class="info-signature" v-if="profile.signature">{{ profile.signature }}</div>
           <div class="info-time">注册时间：{{ formatDateTime(profile.createTime) }}</div>
@@ -83,7 +83,7 @@
 
             <el-form-item label="言灵" prop="yanling" v-if="!isAdmin">
               <el-tag :color="profileForm.yanling ? '#ff9800' : '#8892b0'" effect="dark" size="large">
-                {{ profileForm.yanling || '未觉醒' }}
+                {{ formatYanling(profileForm.yanling) || '未觉醒' }}
               </el-tag>
               <span style="margin-left:8px;font-size:12px;color:var(--text-muted)">言灵不可修改</span>
             </el-form-item>
@@ -148,7 +148,7 @@ import { useUserStore } from '../stores/user'
 import { getProfile, updateProfile, updatePassword } from '../api/user'
 import { uploadAvatar } from '../api/file'
 import { Plus } from '@element-plus/icons-vue'
-import { getGradeColor, formatDateTime } from '../utils/format'
+import { getGradeColor, formatDateTime, formatYanling } from '../utils/format'
 import { getUserPosts } from '../api/post'
 import PostCard from '../components/PostCard.vue'
 
