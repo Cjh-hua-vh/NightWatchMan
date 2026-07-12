@@ -11,10 +11,7 @@ const BASE_URL = isPublic
 
 const service = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  timeout: 10000
 })
 
 const IMAGE_FIELDS = new Set(['avatar', 'cover', 'url'])

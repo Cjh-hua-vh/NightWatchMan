@@ -89,17 +89,19 @@ public class FileController {
         String filename = UUID.randomUUID().toString().replace("-", "") + extension;
 
         try {
-            // 确保目录存在
-            Path avatarDir = Paths.get(uploadDir, AVATAR_SUB_DIR);
+            // 确保目录存在（使用绝对路径，避开相对路径解析问题）
+            Path avatarDir = Paths.get(uploadDir, AVATAR_SUB_DIR).toAbsolutePath();
             Files.createDirectories(avatarDir);
 
-            // 保存文件
-            Path filePath = avatarDir.resolve(filename);
-            file.transferTo(filePath.toFile());
+            // 保存文件 — 用 Files.copy 显式写入，更可靠
+            Path filePath = avatarDir.resolve(filename).toAbsolutePath();
+            try (var in = file.getInputStream()) {
+                Files.copy(in, filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
 
             // 返回可访问的 URL（Spring Boot 默认 /static/ 映射到 classpath:static/）
             String avatarUrl = "/uploads/avatars/" + filename;
-            log.info("头像上传成功: {}, 大小: {} bytes", avatarUrl, file.getSize());
+            log.info("头像上传成功: {}, 大小: {} bytes, 写入路径: {}", avatarUrl, file.getSize(), filePath);
 
             return Result.success("上传成功", avatarUrl);
         } catch (IOException e) {
@@ -122,13 +124,17 @@ public class FileController {
         if (original != null && original.contains(".")) ext = original.substring(original.lastIndexOf("."));
         String filename = UUID.randomUUID().toString().replace("-", "") + ext;
         try {
-            Path dir = Paths.get(uploadDir, POSTS_SUB_DIR);
+            Path dir = Paths.get(uploadDir, POSTS_SUB_DIR).toAbsolutePath();
             Files.createDirectories(dir);
-            file.transferTo(dir.resolve(filename).toFile());
+            Path filePath = dir.resolve(filename).toAbsolutePath();
+            try (var in = file.getInputStream()) {
+                Files.copy(in, filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
             String url = "/uploads/posts/" + filename;
-            log.info("帖子图片上传: {}", url);
+            log.info("帖子图片上传: {}, 写入路径: {}", url, filePath);
             return Result.success("上传成功", url);
         } catch (IOException e) {
+            log.error("帖子图片上传失败: {}", e.getMessage(), e);
             return Result.error(500, "上传失败: " + e.getMessage());
         }
     }
@@ -147,13 +153,17 @@ public class FileController {
         if (original != null && original.contains(".")) ext = original.substring(original.lastIndexOf("."));
         String filename = UUID.randomUUID().toString().replace("-", "") + ext;
         try {
-            Path dir = Paths.get(uploadDir, MESSAGES_SUB_DIR);
+            Path dir = Paths.get(uploadDir, MESSAGES_SUB_DIR).toAbsolutePath();
             Files.createDirectories(dir);
-            file.transferTo(dir.resolve(filename).toFile());
+            Path filePath = dir.resolve(filename).toAbsolutePath();
+            try (var in = file.getInputStream()) {
+                Files.copy(in, filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
             String url = "/uploads/messages/" + filename;
-            log.info("消息图片上传: {}", url);
+            log.info("消息图片上传: {}, 写入路径: {}", url, filePath);
             return Result.success("上传成功", url);
         } catch (IOException e) {
+            log.error("消息图片上传失败: {}", e.getMessage(), e);
             return Result.error(500, "上传失败: " + e.getMessage());
         }
     }

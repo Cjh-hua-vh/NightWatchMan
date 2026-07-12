@@ -195,9 +195,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             user.setNickname(dto.getNickname());
         }
         if (StringUtils.hasText(dto.getAvatar())) {
-            // 删除旧头像文件
+            // 删除旧头像文件（仅当新旧 URL 不一致时，避免自删）
             String oldAvatar = user.getAvatar();
-            if (oldAvatar != null && oldAvatar.startsWith("/uploads/avatars/")) {
+            if (oldAvatar != null && oldAvatar.startsWith("/uploads/avatars/") && !oldAvatar.equals(dto.getAvatar())) {
                 try {
                     Path oldFile = Paths.get(uploadDir, "avatars", oldAvatar.replace("/uploads/avatars/", ""));
                     Files.deleteIfExists(oldFile);
