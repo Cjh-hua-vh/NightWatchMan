@@ -22,7 +22,10 @@ public class BloodTestController {
     }
 
     @PostMapping("/submit")
-    public Result<BloodTestResult> submitExam(@RequestBody Map<String, Object> body) {
+    public Result<BloodTestResult> submitExam(@RequestBody(required = false) Map<String, Object> body) {
+        if (body == null || !body.containsKey("answers")) {
+            return Result.error(400, "请提交答题结果");
+        }
         @SuppressWarnings("unchecked")
         Map<Long, String> answers = new java.util.LinkedHashMap<>();
         Object answersObj = body.get("answers");
