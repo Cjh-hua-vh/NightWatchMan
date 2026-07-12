@@ -215,7 +215,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (StringUtils.hasText(dto.getFaction())) {
             user.setFaction(dto.getFaction());
         }
-        if (dto.getYanling() != null) {
+        // 言灵仅管理员可修改（普通用户不可自行设定）
+        if (dto.getYanling() != null && "ADMIN".equals(user.getRole())) {
             user.setYanling(dto.getYanling());
         }
 

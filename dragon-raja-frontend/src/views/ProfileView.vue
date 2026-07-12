@@ -20,7 +20,7 @@
           </div>
           <div class="info-username">@{{ profile.username }}</div>
           <div class="info-yanling" v-if="profile.yanling">
-            🔥 言灵：<span class="yanling-text">{{ profile.yanling }}</span>
+            言灵：<span class="yanling-text">{{ profile.yanling }}</span>
           </div>
           <div class="info-signature" v-if="profile.signature">{{ profile.signature }}</div>
           <div class="info-time">注册时间：{{ formatDateTime(profile.createTime) }}</div>
@@ -80,7 +80,13 @@
               </el-select>
             </el-form-item>
 
-            <el-form-item label="言灵" prop="yanling">
+            <el-form-item label="言灵" prop="yanling" v-if="!isAdmin">
+              <el-tag :color="profileForm.yanling ? '#ff9800' : '#8892b0'" effect="dark" size="large">
+                {{ profileForm.yanling || '未觉醒' }}
+              </el-tag>
+              <span style="margin-left:8px;font-size:12px;color:var(--text-muted)">言灵不可修改</span>
+            </el-form-item>
+            <el-form-item label="言灵" prop="yanling" v-else>
               <el-input v-model="profileForm.yanling" placeholder="请输入言灵名称" />
             </el-form-item>
 
@@ -146,6 +152,7 @@ import { getUserPosts } from '../api/post'
 import PostCard from '../components/PostCard.vue'
 
 const userStore = useUserStore()
+const isAdmin = ref(userStore.user?.role === 'ADMIN')
 
 const loading = ref(false)
 const savingProfile = ref(false)
